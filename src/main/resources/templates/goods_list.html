@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="utf-8"/>
+  <title>秒杀商品列表</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
+  </link>
+</head>
+<body>
+<div class="container">
+
+  <table class="table table-striped" id="goodslist">
+    <tr><td>商品名称</td><td>商品图片</td><td>商品原价</td><td>秒杀价</td><td>详情</td></tr>
+    <tr  th:each="goods:${goodsList}">
+      <td th:text="${goods.goodsName}"></td>
+      <td ><img th:src="@{/img/{id}(id=${goods.goodsImg})}" width="100" height="100" /></td>
+      <td th:text="${goods.goodsPrice}"></td>
+      <td th:text="${goods.killPrice}"></td>
+      <td><a th:href="'/seckill/view/'+${goods.killId}">详情</a></td>
+    </tr>
+  </table>
+  <a href="/seckill/pay/list" class="btn btn-success">查看已购</a>
+</div>
+
+
+</body>
+</html>

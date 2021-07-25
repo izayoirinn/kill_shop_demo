@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8"/>
+    <title>秒杀商品订单</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+<h1>我的秒杀商品订单</h1>
+<table class="table" id="goodslist">
+    <tr>
+        <th>商品名称</th>
+        <th>商品价格</th>
+        <th>订单状态</th>
+        <th>下单时间</th>
+        <th colspan="3">操作</th>
+    </tr>
+    <tr th:each="killOrder:${list}">
+        <td th:text="${killOrder.orderinfo.goodsname}"></td>
+        <td th:text="${killOrder.orderinfo.goodsprice}"></td>
+        <td>
+            <span th:if="${killOrder.orderinfo.orderstatus}==1">待付款</span>
+            <span th:if="${killOrder.orderinfo.orderstatus}==2">待发货</span>
+            <span th:if="${killOrder.orderinfo.orderstatus}==3">待收货</span>
+            <span th:if="${killOrder.orderinfo.orderstatus}==4">订单已完成</span>
+        </td>
+        <td th:text="${#dates.format(killOrder.orderinfo.createdate, 'yyyy-MM-dd HH:mm:ss')}"></td>
+        <td>
+            <a th:href="@{/killOrderInfo/del/{id}(id=${killOrder.killorderid})}" th:if="${killOrder.orderinfo.orderstatus}==1" class="btn btn-success">取消订单</a>
+        </td>
+        <td>
+            <a  th:href="@{/orderInfo/pay/{id}(id=${killOrder.orderinfo.orderid})}" th:if="${killOrder.orderinfo.orderstatus}==1" class="btn btn-primary">去支付</a>
+        </td>
+        <td>
+            <a th:href="@{/orderInfo/comp/{id}(id=${killOrder.orderinfo.orderid})}" th:if="${killOrder.orderinfo.orderstatus}==3" class="btn btn-success">确定收货</a>
+        </td>
+    </tr>
+</table>
+
+</body>
+</html>

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="top.izayoirinn.mapper.GoodsMapper">
+
+    <resultMap id="BaseResultMap" type="top.izayoirinn.domain.Goods">
+            <id property="goodsId" column="goods_id" jdbcType="INTEGER"/>
+            <result property="goodsName" column="goods_name" jdbcType="VARCHAR"/>
+            <result property="goodsImg" column="goods_img" jdbcType="VARCHAR"/>
+            <result property="goodsContent" column="goods_content" jdbcType="VARCHAR"/>
+            <result property="goodsPrice" column="goods_price" jdbcType="DECIMAL"/>
+            <result property="goodsStock" column="goods_stock" jdbcType="INTEGER"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        goods_id,goods_name,goods_img,
+        goods_content,goods_price,goods_stock
+    </sql>
+</mapper>

@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css" rel="stylesheet"/>
+    <script src="https://ajax.aspnetcdn.com/ajax/jquery/jquery-3.5.1.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"
+            integrity="sha384-aJ21OjlMXNL5UyIl/XNwTMqvzeRMZH2w8c5cRVpzpU8Y5bApTppSuUkhZXN0VxHd"
+            crossorigin="anonymous"></script>
+</head>
+<!--
+orderInfo(
+orderid=20,
+ userid=10,
+ goodsid=4,
+ goodsname=卫龙辣条,
+ goodscount=1,
+ goodsprice=0.30,
+ orderstatus=1,
+ createdate=Fri Jul 16 11:47:36 CST 2021,
+ paydate=null)
+-->
+<body>
+<!--<p th:text="${orderInfo.orderid}"></p>
+<p th:text="${testData}"></p>-->
+<div class="container">
+    <table class="table table-hover text-center">
+        <tr>
+            <td>
+                商品名称:
+            </td>
+            <td th:text="${orderInfo.goodsName}"></td>
+        </tr>
+        <tr>
+            <td>
+                商品价格:
+            </td>
+            <td th:text="${orderInfo.goodsPrice}"></td>
+        </tr>
+        <tr>
+            <td>
+                创建时间:
+            </td>
+            <td th:text="${#dates.format(orderInfo.createDate,'yyyy-MM-dd HH:mm:ss')}"></td>
+        </tr>
+        <tr>
+            <td>
+                支付状态:
+            </td>
+            <td id="payTime">
+                <span th:if="${orderInfo.orderStatus==-1}">已关闭</span>
+                <span th:if="${orderInfo.orderStatus==2}">已支付</span>
+            </td>
+
+
+        </tr>
+        <tr>
+            <td>
+                操作:
+            </td>
+            <td th:if="${orderInfo.orderStatus==-1}">
+                <a class="btn btn-warning" th:href="@{'/seckill/pay/list'}">订单已关闭</a>
+            </td>
+            <td th:if="${orderInfo.orderStatus==1}">
+                <a id="to-pay" class="btn btn-primary">立即付款</a>
+                <a id="to-cancel" class="btn btn-danger">取消订单</a>
+            </td>
+            <td th:if="${orderInfo.orderStatus==2}">
+                <a class="btn btn-success" th:href="@{'/seckill/pay/list'}">订单已完成</a>
+            </td>
+
+        </tr>
+        <tr>
+            <td colspan="2" class="text-center">
+                <a id="to-order-list" class="btn btn-primary">返回订单列表</a>
+            </td>
+        </tr>
+    </table>
+</div>
+</body>
+<script th:inline="javascript">
+    var orderId = [[${orderInfo.orderId}]];
+    var createDate = [[${orderInfo.createDate}]];
+    var orderStatus = [[${orderInfo.orderStatus}]];
+    if (orderStatus === 1) {
+        monitor();
+        var interval = setInterval("monitor()", 1000);
+    }
+    $(function () {
+
+        // 支付
+        $("#to-pay").click(function () {
+            $.post({
+                url: "/seckill/pay/" + orderId,
+                dataType: "json",
+                success: function (data) {
+                    if (data.status === 200) {
+                        alert("支付成功");
+                        console.log(data);
+                        // 刷新页面
+                        location.reload();
+                    } else {
+                        console.log(data.msg);
+                    }
+                }
+            })
+        });
+        // 取消支付
+        $("#to-cancel").click(function () {
+            $.get({
+                url: `/seckill/cancelPay/${orderId}`,
+                dataType: "json",
+                success: function (data) {
+                    if (data.status === 200) {
+                        alert("取消支付成功");
+                        console.log(data);
+                        // 刷新页面
+                        location.reload();
+                    } else {
+                        console.log(data.msg);
+                    }
+                }
+            })
+        })
+
+        $("#to-order-list").click(function () {
+            location.href = "/seckill/pay/list";
+        })
+    });
+
+    function monitor() {
+        let createTime = new Date(createDate).getTime();
+        let nowTime = new Date().getTime();
+        let difference = (createTime + 1000 * 60 * 3) - nowTime;
+        if (difference > 0) {
+            $("#payTime").html(`<span style="color: red">还剩${Math.floor(difference / 1000)}秒关闭订单</span>`);
+        } else {
+            console.log(difference)
+            // 刷新页面
+            setTimeout(() => {
+                location.reload();
+            }, 1000);
+
+        }
+
+    }
+
+</script>
+</html>

@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <title>秒杀商品</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://ajax.aspnetcdn.com/ajax/jquery/jquery-3.5.1.min.js"></script>
+    <!-- 最新的 Bootstrap 核心 JavaScript 文件 -->
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"
+            integrity="sha384-aJ21OjlMXNL5UyIl/XNwTMqvzeRMZH2w8c5cRVpzpU8Y5bApTppSuUkhZXN0VxHd"
+            crossorigin="anonymous"></script>
+    </link>
+    <base th:href="${#request.getContextPath()}+'/'">
+</head>
+<body>
+<div class="container">
+
+    <table class="table table-striped" id="goodslist">
+        <tr>
+            <td>商品名称</td>
+            <td colspan="3" th:text="${goods.goodsName}"></td>
+        </tr>
+        <tr>
+            <td>商品图片</td>
+            <td colspan="3"><img th:src="@{/img/{id}(id=${goods.goodsImg})}" width="200" height="200"/></td>
+        </tr>
+        <tr>
+            <td>秒杀开始时间</td>
+            <td th:text="${#dates.format(goods.startDate, 'yyyy-MM-dd HH:mm:ss')}"></td>
+            <td id="killStatus">
+                <div id="time"></div>
+            </td>
+            <td id="kill-status">
+
+            </td>
+        </tr>
+        <tr>
+            <td>商品原价</td>
+            <td colspan="3" th:text="${goods.goodsPrice}"></td>
+        </tr>
+        <tr>
+            <td>秒杀价</td>
+            <td colspan="3" th:text="${goods.killPrice}"></td>
+        </tr>
+        <tr>
+            <td>库存数量</td>
+            <td id="stock" colspan="3"></td>
+        </tr>
+    </table>
+    <div>
+        <a href="/seckill/pay/list" class="btn btn-success">我的购物车</a>
+        <a href="/seckill/list" class="btn btn-primary">商品列表</a>
+    </div>
+
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title" id="myModalLabel">秒杀商品</h4>
+            </div>
+            <div class="modal-body">
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                <button type="button" class="btn btn-primary">确认</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+<script src="/js/redirect.js"></script>
+<script type="text/javascript" th:inline="javascript">
+    var testStartTime = "2021-07-14T08:37:00.000+08:00";
+
+    var startTime = [[${goods.startDate}]];
+    var endTime = [[${goods.endDate}]];
+    var killId = [[${goods.killId}]];
+    console.log(startTime);
+
+    $(function () {
+        // 刷新库存信息
+        refreshStock();
+    })
+
+    monitor(startTime, endTime);
+    var interval = setInterval("monitor(startTime,endTime)", 1000);
+
+    // 监控时间
+    function monitor(startTime, endTime) {
+
+        startTime = new Date(startTime).getTime();
+        endTime = new Date(endTime).getTime();
+        let nowTime = new Date().getTime();
+
+        if (nowTime < startTime) {
+            console.log("秒杀未开始...");
+
+            $("#time").html(`<p>倒计时:<span style="color: red">${Math.floor((startTime - nowTime) / 1000)}秒</span></p>`);
+            $("#kill-status").html(`<p>秒杀未开始</p>`);
+        }
+        if (nowTime > endTime) {
+            console.log("秒杀已经结束...");
+            $("#kill-status").html(`<p>秒杀已经结束</p>`);
+            // 结束定时任务
+            clearInterval(interval);
+        }
+        if (nowTime >= startTime && nowTime < endTime) {
+            $("#time").html(`<p>距离结束时间还剩:<span style="color: red">${getFormDate((endTime - nowTime))}</span></p>`);
+            //$("#kill-status").html(`<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#myModal">点击秒杀</button>`);
+            if ($("#submit-kill-goods").attr("id") !== "submit-kill-goods") {
+                $("#kill-status").html(`<button id="submit-kill-goods" type="button" class="btn btn-primary">秒杀商品</button>`);
+                bindingButton();
+            }
+
+        }
+    }
+
+    // 绑定秒杀按钮
+    function bindingButton() {
+        $("#submit-kill-goods").click(function () {
+            $.ajax({
+                url: "/seckill/kill/" + [[${goods.killId}]],
+                type: "post",
+                dataType: 'json',
+                success: function (data) {
+                    if (data.status === 201) {
+                        console.log(data);
+                        alert("秒杀成功!");
+                        // 刷新页面 刷新库存信息
+                        // location.reload();
+                        refreshStock();
+                        // 跳转到支付页面
+                        toPayHtml();
+                        // location.href = "/seckill/pay/" + data.data.orderId;
+                    } else {
+                        alert(data.msg);
+                    }
+                }
+            })
+        });
+    }
+
+    // 获取相差时间
+    function getFormDate(date3) {
+        //计算出相差天数
+        let days = Math.floor(date3 / (24 * 3600 * 1000))
+
+        //计算出小时数
+        let leave1 = date3 % (24 * 3600 * 1000)    //计算天数后剩余的毫秒数
+        let hours = Math.floor(leave1 / (3600 * 1000))
+        //计算相差分钟数
+        let leave2 = leave1 % (3600 * 1000)        //计算小时数后剩余的毫秒数
+        let minutes = Math.floor(leave2 / (60 * 1000))
+        //计算相差秒数
+        let leave3 = leave2 % (60 * 1000)      //计算分钟数后剩余的毫秒数
+        let seconds = Math.round(leave3 / 1000)
+        return days + "天 " + hours + "小时 " + minutes + " 分钟" + seconds + " 秒";
+
+    }
+
+    // 刷新库存
+    function refreshStock() {
+        $.get({
+            url: "/seckill/refreshStock/" + killId,
+            dataType: "json",
+            success: function (data) {
+                if (data.status === 200) {
+                    $("#stock").text(data.data);
+                } else {
+                    console.log(data.msg);
+                }
+
+            }
+        });
+    }
+
+    function toPayHtml() {
+        // 直接发起一次请求
+        setTimeout(() => {
+            $.ajax({
+                url: "/seckill/result",
+                dataType: "json",
+                type: "get",
+                data: {
+                    killId: [[${goods.killId}]]
+                },
+                success: function (data) {
+                    if (data.status === 200) {
+                        location.href = "/seckill/pay/" + data.data;
+                    } else if (data.status === 201) {
+                        // 消息还没有处理完
+                    } else {
+                        alert(data.msg);
+                    }
+                }
+            });
+        }, 500);
+
+
+        window.interval = setInterval(() => {
+            $.ajax({
+                url: "/seckill/result",
+                dataType: "json",
+                type: "get",
+                data: {
+                    killId: [[${goods.killId}]]
+                },
+                success: function (data) {
+                    if (data.status === 200) {
+                        location.href = "/seckill/pay/" + data.data;
+                    } else if (data.status === 201) {
+                        // 消息还没有处理完
+                    } else {
+                        alert(data.msg);
+                        window.clearInterval(window.interval);
+                    }
+                }
+            });
+        }, 2000);
+    }
+
+</script>
+
+</html>

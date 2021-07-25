@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="top.izayoirinn.mapper.KillGoodsMapper">
+
+    <resultMap id="BaseResultMap" type="top.izayoirinn.domain.KillGoods">
+        <id property="killId" column="kill_id" jdbcType="INTEGER"/>
+        <result property="goodsId" column="goods_id" jdbcType="INTEGER"/>
+        <result property="stockCount" column="stock_count" jdbcType="INTEGER"/>
+        <result property="startDate" column="start_date" jdbcType="TIMESTAMP"/>
+        <result property="endDate" column="end_date" jdbcType="TIMESTAMP"/>
+        <result property="killPrice" column="kill_price" jdbcType="DECIMAL"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        kill_id
+        ,goods_id,stock_count,
+        start_date,end_date,kill_price
+    </sql>
+    <select id="killGoodsList" resultType="top.izayoirinn.vo.KillGoodsVO">
+        SELECT k.*, g.goods_name, g.goods_price, g.goods_img
+        FROM kill_goods k,
+             goods g
+        WHERE k.goods_id = g.goods_id
+    </select>
+    <select id="getKillGoodsByKillId" resultType="top.izayoirinn.vo.KillGoodsVO">
+        SELECT k.*, g.goods_name, g.goods_price, g.goods_img
+        FROM kill_goods k,
+             goods g
+        WHERE k.goods_id = g.goods_id
+          and kill_id = #{killId}
+    </select>
+
+    <select id="getKillGoodsByGoodsId" resultType="top.izayoirinn.vo.KillGoodsVO">
+        SELECT k.*, g.goods_name, g.goods_price, g.goods_img
+        FROM kill_goods k,
+             goods g
+        WHERE k.goods_id = g.goods_id
+          and k.goods_id = #{goodsId}
+    </select>
+    <!--
+    &gt;转义
+    -->
+    <update id="decreaseStockCount">
+        UPDATE kill_goods g
+            LEFT JOIN order_info o
+        ON g.goods_id = o.goods_id
+            SET g.stock_count = g.stock_count - #{count}
+        WHERE
+            g.stock_count
+         &gt; 0
+          AND o.order_id = #{orderId}
+    </update>
+</mapper>
